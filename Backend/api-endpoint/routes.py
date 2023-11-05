@@ -1,6 +1,6 @@
 
-
-from flask import Flask
+from models import register as dynamodb
+from flask import Flask,request
 
 # Flask application
 app = Flask(__name__)
@@ -15,7 +15,20 @@ def user_authentication():
 
 @app.route('/register', methods=['POST'])
 def register_user():
-    return {'Message': 'Testing register endpoint'}
+    
+     data = request.get_json()
+     
+     response = dynamodb.register_user(data)   
+     
+     
+     if (response['ResponseMetadata']['HTTPStatusCode'] == 200):
+       return {
+           'Message': 'Account Created Successfully',
+       }
+     return { 
+       'Message': 'Error in Account Creation',
+       'response': response
+   }
 
 
 #Upload data
