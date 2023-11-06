@@ -1,6 +1,7 @@
 
 from models import register as dynamodb
 from flask import Flask,request
+from models import upload_data as recording_details   
 
 # Flask application
 app = Flask(__name__)
@@ -35,7 +36,35 @@ def register_user():
 
 @app.route('/upload', methods=['POST'])
 def upload_data():
-   return {'Message': 'Testing upload endpoint'}
+    
+    #upload file to S3
+    videofile=request.files['videoFile']
+    industry=request.form['industry']
+    meetingAgenda=request.form['meetingAgenda']
+    email=request.form['email']
+    audioLanguage=request.form['audioLanguage']
+    filename=videofile.filename
+    
+
+    s3response=recording_details.recording_upload(videofile)
+    if s3response:
+      dbresponse=recording_details.recording_data(industry,meetingAgenda,email,audioLanguage,filename)
+    
+
+      if (dbresponse['ResponseMetadata']['HTTPStatusCode'] == 200):
+          return {
+           'Message': 'Data inserted to Dynamo db',
+           'response': dbresponse
+       }
+      else:
+         return {
+           'Message': 'Error in dynamo db insert',
+       }
+    else:
+       return {
+           'Message': 's3 upload error',
+           'response': s3response
+       }
 
 #Fetching current task planner
 
