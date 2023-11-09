@@ -1,7 +1,6 @@
 
 from models import register as dynamodb
 from flask import Flask,request
-from models import upload_data as recording_details   
 
 # Flask application
 app = Flask(__name__)
@@ -11,6 +10,87 @@ app = Flask(__name__)
 @app.route('/login', methods=['POST'])
 def user_authentication():
     return {'Message': 'Testing login endpoint'}
+
+#Register User
+
+@app.route('/register', methods=['POST'])
+def register_user():
+    
+     data = request.get_json()
+     
+     response = dynamodb.register_user(data)   
+     
+     
+     if (response['ResponseMetadata']['HTTPStatusCode'] == 200):
+       return {
+           'Message': 'Account Created Successfully',
+       }
+     return { 
+       'Message': 'Error in Account Creation',
+       'response': response
+   }
+
+
+#Upload data
+
+@app.route('/upload', methods=['POST'])
+def upload_data():
+   return {'Message': 'Testing upload endpoint'}
+
+#Fetching current task planner
+
+@app.route('/getlatestplanner', methods=['POST'])
+def getlatestplanner():
+   return {'Message': 'Testing endpoint to fetch current task planner'}
+
+#fetching all planner created by user
+@app.route('/displayallplanner', methods=['POST'])
+def displayallplanner():
+   return {'Message': 'Testing endpoint to fetch all task planner'}
+
+
+
+
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', port=5000, debug=True)
+
+    from models import login as getrequestdb
+from models import register as dynamodb
+from models import upload_data as recording_details
+from models import display_planner as allplans
+from models import latest_planner as latestplan
+import uuid
+
+
+from flask import Flask,jsonify,request
+
+# Flask application
+app = Flask(__name__)
+ 
+
+#Validate User
+@app.route('/login', methods=['POST'])
+def user_authentication():
+    
+     data = request.get_json()
+     input_password=data['password']
+
+     response = getrequestdb.user_authentication(data['email'])   
+     
+     
+     if (response['ResponseMetadata']['HTTPStatusCode'] == 200):
+       password=response['Item']['password'] 
+       
+       if password==input_password:
+        print("authentication successful")
+        return {
+           'Message': 'Authentication Successful',
+           'response': response
+       }
+     return { 
+       'Message': 'Authentication Failed',
+       'response': response
+   }
 
 #Register User
 
@@ -65,20 +145,20 @@ def upload_data():
            'Message': 's3 upload error',
            'response': s3response
        }
-
-#Fetching current task planner
-
+    
+#fetching latest planner created by user
 @app.route('/getlatestplanner', methods=['POST'])
 def getlatestplanner():
    return {'Message': 'Testing endpoint to fetch current task planner'}
-
+ 
 #fetching all planner created by user
 @app.route('/displayallplanner', methods=['POST'])
 def displayallplanner():
    return {'Message': 'Testing endpoint to fetch all task planner'}
 
+     
 
-
+#need to handle error in s3 upload, if upload fails data should not be inserted in dynamo db
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000, debug=True)
