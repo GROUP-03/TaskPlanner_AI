@@ -13,9 +13,9 @@ resource = resource(
 
 
 upload_detail  = resource.Table('UploadDetail')
-input_bucket='audio-input-taskplanner'
+input_bucket='input-taskplanner'
 
-def recording_upload(videofile):
+def recording_upload(file_object,filename,meetingAgenda,email):
    try:
         s3 = boto3.client(
             's3',
@@ -24,7 +24,13 @@ def recording_upload(videofile):
             region_name=config.REGION_NAME
         )
 
-        response=s3.upload_fileobj(videofile,input_bucket, videofile.filename)#specify s3 bucket detail
+        response=s3.upload_fileobj(file_object,input_bucket,filename,ExtraArgs={
+        "Metadata": {
+            "email": email,
+            "meetingAgenda": meetingAgenda,
+           
+        }
+    })
         return True
    except Exception as e:
         print(f"Error in uploading file to s3: {str(e)}")
