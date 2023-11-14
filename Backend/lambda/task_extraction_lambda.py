@@ -18,13 +18,18 @@ def lambda_handler(event, context):
     s3objectname = record['s3']['object']['key']
     
     s3 = boto3.client('s3',region_name='us-east-2')
-
+   
+    metadataresponse = s3.head_object(Bucket=s3bucketname, Key=s3objectname)
+    meetingagenda=metadataresponse['Metadata']['meetingagenda']
+    email=metadataresponse['Metadata']['email']
+    #print("metadata:", meetingagenda,email)
+    
     response = s3.get_object(Bucket=s3bucketname, Key=s3objectname)
 
     filedata = response['Body'].read()
     text=json.loads(filedata)
     transcriptedtext = text['results']['transcripts'][0]['transcript']
-    
+    #print(transcriptedtext)
 
     lowercase_text=transcriptedtext.lower()
     
@@ -68,7 +73,9 @@ def lambda_handler(event, context):
                     formatted_deadline=task_deadline.strftime('%m-%d-%Y')
                     task_details[validSentenceCount] = {'assignee': Assignee, 'task': task_detail, 'deadline': formatted_deadline}
 
-    print("Task Dictionary:", task_details)
+    
+                
+    #print("Task Dictionary:", task_details)
 
     resource=boto3.resource('dynamodb')
     taskdetail  = resource.Table('Task_detail')
@@ -82,7 +89,11 @@ def lambda_handler(event, context):
            'assignee'     : assignee,
            'deadline' :deadline,
            'createdDate'  : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-           'task':task
+           'task':task,
+           'email':email,
+           'meetingagenda':meetingagenda
+
+
             }
          )
 

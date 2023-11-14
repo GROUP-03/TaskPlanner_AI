@@ -15,7 +15,7 @@ resource = resource(
 upload_detail  = resource.Table('UploadDetail')
 input_bucket='input-taskplanner'
 
-def recording_upload(file_object,filename,meetingAgenda,email):
+def recording_upload(file_object,filename,meetingAgenda,email,audioLanguage):
    try:
         s3 = boto3.client(
             's3',
@@ -28,6 +28,8 @@ def recording_upload(file_object,filename,meetingAgenda,email):
         "Metadata": {
             "email": email,
             "meetingAgenda": meetingAgenda,
+            "audioLanguage":audioLanguage
+
            
         }
     })
