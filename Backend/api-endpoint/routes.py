@@ -96,12 +96,22 @@ def upload_data():
 
 @app.route('/getlatestplanner', methods=['POST'])
 def getlatestplanner():
-   return {'Message': 'Testing endpoint to fetch current task planner'}
+  
+     data = request.get_json()
+     
+     response = latestplan.get_latest_plan(data['email'])   
+     print(response)
+     return response
 
 #fetching all planner created by user
 @app.route('/displayallplanner', methods=['POST'])
-def displayallplanner():
-   return {'Message': 'Testing endpoint to fetch all task planner'}
+def display_all_planner():
+    
+     data = request.get_json()
+     
+     response = allplans.display_all_taskplans(data['email'])   
+     print(response)
+     return response
      
 
 #need to handle error in s3 upload, if upload fails data should not be inserted in dynamo db
