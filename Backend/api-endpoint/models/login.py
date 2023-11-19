@@ -1,4 +1,4 @@
-# importing nessorcy packages and config file that contains keys for connecting to aws 
+# importing required packages and config file that contains keys for connecting to aws service
 from boto3 import resource 
 import config
 

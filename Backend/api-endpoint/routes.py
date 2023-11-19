@@ -3,7 +3,7 @@ from models import register as dynamodb
 from models import upload_data as recording_details
 from models import display_planner as allplans
 from models import latest_planner as latestplan
-import uuid
+
 from flask_cors import CORS
 import io
 
