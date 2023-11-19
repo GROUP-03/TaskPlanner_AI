@@ -1,10 +1,9 @@
-
 from models import login as getrequestdb
 from models import register as dynamodb
 from models import upload_data as recording_details
 from models import display_planner as allplans
 from models import latest_planner as latestplan
-import uuid
+
 from flask_cors import CORS
 import io
 
@@ -29,14 +28,13 @@ def user_authentication():
        password=response['Item']['password'] 
        
        if password==input_password:
-        print("authentication successful")
+        
         return {
-           'Message': 'Authentication Successful',
-           'response': response
+           'Message': 'Success'
+           
        }
      return { 
-       'Message': 'Authentication Failed',
-       'response': response
+       'Message': 'Failed'
    }
 
 #Register User
@@ -51,11 +49,11 @@ def register_user():
      
      if (response['ResponseMetadata']['HTTPStatusCode'] == 200):
        return {
-           'Message': 'Account Created Successfully',
+           'Message': 'Success'
        }
      return { 
-       'Message': 'Error in Account Creation',
-       'response': response
+       'Message': 'Failed'
+      
    }
 
 
@@ -72,23 +70,23 @@ def upload_data():
    filename=data.get('filename')
     
 
-   s3response=recording_details.recording_upload(videofile,filename,meetingAgenda,email)
+   s3response=recording_details.recording_upload(videofile,filename,meetingAgenda,email,audioLanguage)
    if s3response:
       dbresponse=recording_details.recording_data(industry,meetingAgenda,email,audioLanguage,filename)
     
 
       if (dbresponse['ResponseMetadata']['HTTPStatusCode'] == 200):
           return {
-           'Message': 'Data inserted to Dynamo db',
+           'Message': 'Success',
            'response': dbresponse
        }
       else:
          return {
-           'Message': 'Error in dynamo db insert',
+           'Message': 'Failed'
        }
    else:
     return {
-           'Message': 's3 upload error',
+           'Message': 'Failed',
            'response': s3response
        }
 
@@ -99,9 +97,17 @@ def getlatestplanner():
   
      data = request.get_json()
      
-     response = latestplan.get_latest_plan(data['email'])   
-     print(response)
-     return response
+     response = latestplan.get_latest_plan(data['email'])  
+
+     if (response['ResponseMetadata']['HTTPStatusCode'] == 200):
+       return {
+           'Message': 'Success',
+           'response':response
+       }
+     return { 
+       'Message': 'Failed'
+      
+   }
 
 #fetching all planner created by user
 @app.route('/displayallplanner', methods=['POST'])
@@ -110,11 +116,17 @@ def display_all_planner():
      data = request.get_json()
      
      response = allplans.display_all_taskplans(data['email'])   
-     print(response)
-     return response
+     if (response['ResponseMetadata']['HTTPStatusCode'] == 200):
+       return {
+           'Message': 'Success',
+           'response':response
+       }
+     return { 
+       'Message': 'Failed'
+      
+   }
      
 
-#need to handle error in s3 upload, if upload fails data should not be inserted in dynamo db
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000, debug=True)
