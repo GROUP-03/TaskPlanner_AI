@@ -1,6 +1,7 @@
 import { Button, Card, CardContent, FormControl, FormHelperText, Input, InputLabel, Typography } from '@mui/material';
 import React, { Fragment, useState } from 'react';
 import axios from "axios";
+import logInWalpaper from "../assets/login-wallpaper.jpg"
 
 export const Signup = () => {
     const [firstName, setFirstName] = useState()
@@ -43,10 +44,18 @@ export const Signup = () => {
     };
 
     return <Fragment>
-        <Card sx={{ minWidth: 275, margin: 5, height: 500 }}>
+        <div style={{
+            height: 800, width: "100%", marginTop: -40,
+            paddingTop: 40,
+            backgroundImage: `url(${logInWalpaper})`,
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center center"
+        }} >
+        <Card sx={{ minWidth: 275, marginLeft: "auto", marginRight: "auto", marginTop: 15, height: 500, maxWidth: 400, opacity: 0.85, boxShadow: "2px 2px 8px" }}>
             <CardContent>
                 <Typography variant="h3" color="text.secondary" gutterBottom>
-                    Login
+                    Signup
                 </Typography>
                 <form onSubmit={handleSubmit} style={{ height: '23rem', display: 'flex', flexDirection: "column", justifyContent: "space-between" }}>
                     {/* reference: https://mui.com/material-ui/api/form-control/ */}
@@ -64,7 +73,7 @@ export const Signup = () => {
                     </FormControl>
                     <FormControl variant='standard' sx={{ width: "100%" }}>
                         <InputLabel htmtlFor="password">Password</InputLabel>
-                        <Input type='pass' required='true' onChange={handlePassUpdate} id="password" aria-describedby="password-helper-text" sx={{ width: "100%" }} />
+                        <Input type='password' required='true' onChange={handlePassUpdate} id="password" aria-describedby="password-helper-text" sx={{ width: "100%" }} />
                     </FormControl>
 
                     <FormControl variant='standard' sx={{ width: "100%" }}>
@@ -78,5 +87,6 @@ export const Signup = () => {
                 <Typography>Have an account? <a href="/login">Login</a></Typography>
             </CardContent>
         </Card>
+        </div>
     </Fragment>
 }
