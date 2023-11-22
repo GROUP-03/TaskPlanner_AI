@@ -7,8 +7,10 @@ import logInWalpaper from "../assets/login-wallpaper.jpg"
 export const Login = () => {
     const navigate = useNavigate()
 
+
     const [email, setEmail] = useState()
     const [pass, setPass] = useState()
+    const [resMessage, setResMessage] = useState()
 
 
     const handleEmailUpdate = (event) => {
@@ -27,13 +29,21 @@ export const Login = () => {
             console.log('POST Request Response:', response);//
             if(response['data']['Message']=='Success')
             {
-            // add if condition response is success then 
+            
             sessionStorage.setItem("user",JSON.stringify(email))
-            navigate("/upload_data")}
+            navigate("/Home")}
+            if(response['data']['Message']=='Failed')
+            {
+                setResMessage('Email or password is incorrect or Email does not exist')
+                setEmail('')
+                setPass('')
+            //navigate("/login")}
+            //window.location.reload();
+            console.log('Email or password is incorrect or Email does not exist');
 
-
-          })
-          .catch(error => console.error('Error:', error)); 
+          }})
+          .catch(error => {console.error('Error:', error)
+          setResMessage('Internal Server Error')}); 
         
     };
 
@@ -46,7 +56,10 @@ export const Login = () => {
             backgroundRepeat: "no-repeat",
             backgroundPosition: "center center"
         }} >
-        <Card  sx={{ minWidth: 275, marginLeft: "auto", marginRight: "auto", marginTop: 15, height: 500, maxWidth: 400, opacity: 0.85, boxShadow: "2px 2px 8px" }}>
+            <Typography variant="h2" color="text.secondary" >
+                 Task Planner
+                </Typography>
+        <Card  sx={{ minWidth: 275, marginLeft: "auto", marginRight: "auto", marginTop: 8, height: 500, maxWidth: 400, opacity: 0.85, boxShadow: "2px 2px 8px" }}>
             <CardContent>
                 <Typography variant="h3" color="text.secondary" gutterBottom>
                     Login
@@ -61,6 +74,7 @@ export const Login = () => {
                         <InputLabel htmtlFor="password">Password</InputLabel>
                         <Input type='password' required='true' onChange={handlePassUpdate} id="password" aria-describedby="password-helper-text" sx={{ width: "100%" }} />
                     </FormControl>
+                    {resMessage && <Typography color={'red'}>{resMessage}</Typography>}
                     <Button type='submit' variant='contained'>Login</Button>
                 </form>
                 <Typography>Don't have an account? <a href="/signup">Sign Up</a></Typography>
