@@ -9,7 +9,7 @@ resource = resource(
     aws_secret_access_key = config.AWS_SECRET_ACCESS_KEY,
     region_name           = config.REGION_NAME
 )
-taskDetail = resource.Table('TaskDetail')
+taskDetail = resource.Table('Task_detail')
 
 def display_all_taskplans(email):
     try:

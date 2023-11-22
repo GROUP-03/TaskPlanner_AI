@@ -1,14 +1,14 @@
 import json
 import nltk
-from nltk.tokenize import word_tokenize, sent_tokenize
-import dateparser
-import string
+from nltk.tokenize import sent_tokenize
 import boto3
 import datetime
+import os
+from openai import OpenAI
+import uuid
 
 nltk.data.path.append('/tmp/nltk_data')
 nltk.download('punkt', download_dir='/tmp/nltk_data')
-nltk.download('averaged_perceptron_tagger', download_dir='/tmp/nltk_data')
 
 def lambda_handler(event, context):
     #Reading s3 event details and file content
@@ -22,73 +22,62 @@ def lambda_handler(event, context):
     metadataresponse = s3.head_object(Bucket=s3bucketname, Key=s3objectname)
     meetingagenda=metadataresponse['Metadata']['meetingagenda']
     email=metadataresponse['Metadata']['email']
-    #print("metadata:", meetingagenda,email)
     
     response = s3.get_object(Bucket=s3bucketname, Key=s3objectname)
 
     filedata = response['Body'].read()
     text=json.loads(filedata)
     transcriptedtext = text['results']['transcripts'][0]['transcript']
-    #print(transcriptedtext)
 
     lowercase_text=transcriptedtext.lower()
     
     #task extraction process
-    exceptions_proper_nouns = ['submission','january','february','march','april','may','june','july','august','december','november', 'october', 'september','assignment', 'project', 'uh']
-    task_words = ['assignment', 'assignments', 'homework', "submission", "task"]
-    deadline_keywords = ["completed by", "finish by", "due on", "scheduled for", "deadline", "duedate"]
     
-    task_details={}
-    validSentenceCount=0
-    
-    sentencesToken = sent_tokenize(transcriptedtext)
+    #load keywords from environmental variables
+    task_words =os.environ['TASK_KEYWORDS']
+    deadline_keywords = os.environ['DEADLINE_KEYWORDS']
+    valid_sentence=''
+    sentencesToken = sent_tokenize(lowercase_text)
    
     for sentence in sentencesToken:
-       
-        finalsentence=sentence.translate(str.maketrans('', '', string.punctuation))
-       
-        contains_taskkeyword = any(word in finalsentence for word in task_words) 
-        contains_deadline_keyword=any(word in finalsentence for word in deadline_keywords)
+      contains_taskkeyword = any(word in sentence for word in task_words) 
+      contains_deadline_keyword=any(word in sentence for word in deadline_keywords)
 
-        if contains_taskkeyword==True and contains_deadline_keyword==True:
-     
-            validSentenceCount= validSentenceCount+1
-            word_tokens = word_tokenize(finalsentence)
-            word_postag = nltk.pos_tag(word_tokens)
-       
-            Assignee = None
-                
-            for words, pos_tag in word_postag:
-                if (pos_tag in ['NNP']) and (words.lower() not in exceptions_proper_nouns):
-                    Assignee = words
-                   
-                if(words.lower() in task_words):
-                        index = word_tokens.index(words)
-                        task_info_1 = word_tokens[index-1]
-                        task_detail = f"{task_info_1} {words}"
-                        
-                    
-                if(words.lower() in deadline_keywords):
-                    task_deadline=dateparser.parse(sentence.split(words)[-1].strip())
-                    formatted_deadline=task_deadline.strftime('%m-%d-%Y')
-                    task_details[validSentenceCount] = {'assignee': Assignee, 'task': task_detail, 'deadline': formatted_deadline}
+      if contains_taskkeyword==True and contains_deadline_keyword==True: 
+            valid_sentence=valid_sentence+sentence
+            
+    #Calling open AI to extract task details
 
+
+    client = OpenAI(
+    api_key=os.environ['OPENAPI_KEY']
+    )
+
+    completion = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+  messages=[
+    {"role": "user", "content": f"Identify assignee, deadline in YYYY-MM-dd format and task from following sentences and write it in json format in a key named task_info {valid_sentence}"}
+  ]
+)
+
+    content=completion.choices[0].message.content
+
+    task_details= json.loads(content)
     
-                
-    #print("Task Dictionary:", task_details)
-
+    #Storing task details in dynamo db
     resource=boto3.resource('dynamodb')
     taskdetail  = resource.Table('Task_detail')
 
     with taskdetail.batch_writer() as writer:
-        for key, value in task_details.items():
-         assignee=value.get('assignee')
-         task=value.get('task')
-         deadline=value.get('deadline')
-         writer.put_item(Item={
+     for data in task_details.get('task_info'):
+        assignee = data.get('assignee').title()
+        deadline = data.get('deadline')
+        task = data.get('task').title()
+        writer.put_item(Item={
            'assignee'     : assignee,
            'deadline' :deadline,
-           'createdDate'  : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+           'createdDate':datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+           'uid':str(uuid.uuid4()),
            'task':task,
            'email':email,
            'meetingagenda':meetingagenda
