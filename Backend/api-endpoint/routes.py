@@ -1,11 +1,13 @@
+
 from models import login as getrequestdb
 from models import register as dynamodb
 from models import upload_data as recording_details
 from models import display_planner as allplans
 from models import latest_planner as latestplan
-
+import uuid
 from flask_cors import CORS
 import io
+import json
 
 
 from flask import Flask,jsonify,request
@@ -23,8 +25,10 @@ def user_authentication():
 
      response = getrequestdb.user_authentication(data['email'])   
      
+     print("response")
      
-     if (response['ResponseMetadata']['HTTPStatusCode'] == 200):
+     if (response['ResponseMetadata']['HTTPStatusCode'] == 200 and 'Item' in response ):
+      
        password=response['Item']['password'] 
        
        if password==input_password:
@@ -102,7 +106,7 @@ def getlatestplanner():
      if (response['ResponseMetadata']['HTTPStatusCode'] == 200):
        return {
            'Message': 'Success',
-           'response':response
+           'response':response['Items']
        }
      return { 
        'Message': 'Failed'
@@ -119,13 +123,14 @@ def display_all_planner():
      if (response['ResponseMetadata']['HTTPStatusCode'] == 200):
        return {
            'Message': 'Success',
-           'response':response
+           'response':response['Items']
        }
      return { 
        'Message': 'Failed'
       
    }
      
+
 
 
 if __name__ == '__main__':
