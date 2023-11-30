@@ -25,7 +25,8 @@ def lambda_handler(event, context):
     transcriptedoutput = f'{s3objectname}-{timestamp}-transcription.json'
 
     s3outputbucket = 'transcribed-out-planner'
-    
+
+    #reference:https://medium.com/@himanshukabra2212/automating-speech-to-text-with-s3-lambda-and-amazon-transcribe-bc075d952d9e#:~:text=By%20setting%20up%20an%20S3,saved%20to%20the%20output%20bucket
     client = boto3.client('transcribe')
     
     response = client.start_transcription_job(
@@ -43,7 +44,7 @@ def lambda_handler(event, context):
             break  
         time.sleep(10)
 
-    #print("status"+jobstatus['TranscriptionJob']['TranscriptionJobStatus'])
+    print("status"+jobstatus['TranscriptionJob']['TranscriptionJobStatus'])
     if jobstatus['TranscriptionJob']['TranscriptionJobStatus'] == 'COMPLETED':
     
         s3getresponse = s3.get_object(Bucket=s3outputbucket, Key=transcriptedoutput)
