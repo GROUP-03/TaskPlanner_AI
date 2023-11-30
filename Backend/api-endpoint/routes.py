@@ -1,12 +1,13 @@
+#reference:https://www.bacancytechnology.com/blog/aws-dynamodb-with-flask-apis-and-boto3
 
 from models import login as getrequestdb
 from models import register as dynamodb
 from models import upload_data as recording_details
 from models import display_planner as allplans
-from models import latest_planner as latestplan
-import uuid
+#from models import latest_planner as latestplan
+
 from flask_cors import CORS
-import io
+
 import json
 
 
@@ -14,15 +15,18 @@ from flask import Flask,jsonify,request
 
 # Flask application
 app = Flask(__name__)
+#enabling CORS
 CORS(app)
 
-#Validate User
+# route to validate User
 @app.route('/login', methods=['POST'])
 def user_authentication():
-    
+     
+     #retrieving post request data
      data = request.get_json()
      input_password=data['password']
-
+     
+     #calling function to fetch stored password from db
      response = getrequestdb.user_authentication(data['email'])   
      
      print("response")
@@ -31,6 +35,7 @@ def user_authentication():
       
        password=response['Item']['password'] 
        
+       #comparing stored password with password received in post request
        if password==input_password:
         
         return {
@@ -41,13 +46,15 @@ def user_authentication():
        'Message': 'Failed'
    }
 
-#Register User
+#route to register User
 
 @app.route('/register', methods=['POST'])
 def register_user():
     
+     #retrieving post request data
      data = request.get_json()
      
+     #calling function to store registration details in db
      response = dynamodb.register_user(data)   
      
      
@@ -61,10 +68,12 @@ def register_user():
    }
 
 
-#Upload data
+#route to upload data
 
 @app.route('/upload', methods=['POST'])
 def upload_data():
+   
+   #retrieving post request data
    data = request.form.to_dict()
    videofile = request.files['file']
    industry=data.get('industry')
@@ -73,8 +82,10 @@ def upload_data():
    audioLanguage=data.get('audio_language')
    filename=data.get('filename')
     
-
+   #Calling function to upload recording file to s3
    s3response=recording_details.recording_upload(videofile,filename,meetingAgenda,email,audioLanguage)
+   
+   #if response is success then calling function to store upload details in db
    if s3response:
       dbresponse=recording_details.recording_data(industry,meetingAgenda,email,audioLanguage,filename)
     
@@ -96,29 +107,30 @@ def upload_data():
 
 #Fetching current task planner
 
-@app.route('/getlatestplanner', methods=['POST'])
-def getlatestplanner():
+#@app.route('/getlatestplanner', methods=['POST'])
+#def getlatestplanner():
   
-     data = request.get_json()
+     #data = request.get_json()
      
-     response = latestplan.get_latest_plan(data['email'])  
+     #response = latestplan.get_latest_plan(data['email'])  
 
-     if (response['ResponseMetadata']['HTTPStatusCode'] == 200):
-       return {
-           'Message': 'Success',
-           'response':response['Items']
-       }
-     return { 
-       'Message': 'Failed'
+     #if (response['ResponseMetadata']['HTTPStatusCode'] == 200):
+       #return {
+           #'Message': 'Success',
+           #'response':response['Items']
+      # }
+     #return { 
+       #'Message': 'Failed'
       
-   }
+   #}
 
-#fetching all planner created by user
+# route to fetch plans created by user
 @app.route('/displayallplanner', methods=['POST'])
 def display_all_planner():
     
      data = request.get_json()
      
+     #calling function to fetch all plans created by user
      response = allplans.display_all_taskplans(data['email'])   
      if (response['ResponseMetadata']['HTTPStatusCode'] == 200):
        return {
