@@ -2,8 +2,11 @@ import { Button, Card, CardContent, FormControl, FormHelperText, Input, InputLab
 import React, { Fragment, useState } from 'react';
 import axios from "axios";
 import logInWalpaper from "../assets/login-wallpaper.jpg"
+import { useNavigate} from "react-router-dom"
 
 export const Signup = () => {
+    const navigate = useNavigate()
+    const [resMessage, setResMessage] = useState()
     const [firstName, setFirstName] = useState()
     const [lastName, setLastName] = useState()
     const [email, setEmail] = useState()
@@ -35,12 +38,25 @@ export const Signup = () => {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        axios.post("http://localhost:8000/signup", {
+        axios.post("http://13.59.232.212:5000/register", {
             firstName: firstName,
             lastName: lastName,
             email: email,
             password: pass,
-        });
+        })
+        .then(response => {
+           
+            console.log('POST Request Response:', response);//
+            if(response['data']['Message']=='Success')
+            {
+            
+            
+            navigate("/login")}
+
+
+          })
+          .catch(error => {console.error('Error:', error)
+          setResMessage('Internal Server Error')}); 
     };
 
     return <Fragment>
@@ -78,10 +94,10 @@ export const Signup = () => {
 
                     <FormControl variant='standard' sx={{ width: "100%" }}>
                         <InputLabel htmtlFor="re-pass">Re-type Password</InputLabel>
-                        <Input id="re-pass" type='re-pass' required='true' onChange={handleRePassUpdate} aria-describedby="re-pass-helper-text" sx={{ width: "100%" }} />
+                        <Input id="re-pass" type='password' required='true' onChange={handleRePassUpdate} aria-describedby="re-pass-helper-text" sx={{ width: "100%" }} />
                         {!passMatch && <FormHelperText id="re-pass">Passwords did not match</FormHelperText>}
                     </FormControl>
-
+                    {resMessage && <Typography color={'red'}>{resMessage}</Typography>}
                     <Button type='submit' variant='contained' display={passMatch} >Signup</Button>
                 </form>
                 <Typography>Have an account? <a href="/login">Login</a></Typography>

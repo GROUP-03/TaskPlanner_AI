@@ -23,7 +23,7 @@ export const Login = () => {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        axios.post("http://127.0.0.1:5000/login", { email: email, password: pass })
+        axios.post("http://13.59.232.212:5000/login", { email: email, password: pass })
         .then(response => {
             // Handle the response as needed, without saving it in state
             console.log('POST Request Response:', response);//
@@ -56,12 +56,12 @@ export const Login = () => {
             backgroundRepeat: "no-repeat",
             backgroundPosition: "center center"
         }} >
-            <Typography variant="h2" color="text.secondary" >
-                 Task Planner
+            <Typography variant="h3" color="text.secondary" sx={{marginTop: 8}} >
+                 <b>Task Planner AI</b>
                 </Typography>
         <Card  sx={{ minWidth: 275, marginLeft: "auto", marginRight: "auto", marginTop: 8, height: 500, maxWidth: 400, opacity: 0.85, boxShadow: "2px 2px 8px" }}>
             <CardContent>
-                <Typography variant="h3" color="text.secondary" gutterBottom>
+                <Typography variant="h4" color="text.secondary" gutterBottom>
                     Login
                 </Typography>
                 <form onSubmit={handleSubmit} style={{ height: '15rem', display: 'flex', flexDirection: "column", justifyContent: "space-between", padding: "10%" }}>
